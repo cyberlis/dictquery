@@ -42,49 +42,50 @@ class DQKeyError(DQException, KeyError):
 
 Token = namedtuple('Token', ['type', 'value'])
 
-NUMBER = r"(?P<NUMBER>(-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?))"
-BOOLEAN = r"(?P<BOOLEAN>true|false)"
-NONE = r"(?P<NONE>null|none|nil)"
-STRING = r'(?P<STRING>%s|%s)' % (r'"([^"\\]*|\\["\\bfnrt\/]|\\u[0-9a-f]{4})*"',
-                                 r"'([^'\\]*|\\['\\bfnrt\/]|\\u[0-9a-f]{4})*'")
-LPAR = r'(?P<LPAR>\()'
-RPAR = r'(?P<RPAR>\))'
-LBRACKET = r"(?P<LBRACKET>\[)"
-RBRACKET = r"(?P<RBRACKET>\])"
-COMMA = r"(?P<COMMA>\,)"
-NOTEQUAL = r"(?P<NOTEQUAL>\!=|\<\>)"
-EQUAL = r"(?P<EQUAL>=)"
-LT = r"(?P<LT>\<)"
-GT = r"(?P<GT>\>)"
-LTE = r"(?P<LTE>\<=)"
-GTE = r"(?P<GTE>\>=)"
-OR = r"(?P<OR>OR)"
-IN = r"(?P<IN>IN)"
-AND = r"(?P<AND>AND)"
-NOT = r"(?P<NOT>NOT)"
-LIKE = r"(?P<LIKE>LIKE)"
-MATCH = r"(?P<MATCH>MATCH)"
-CONTAIN = r"(?P<CONTAIN>CONTAIN)"
-REGEXP = r"(?P<REGEXP>/.*(?<!\\)/)"
-WS = r"(?P<WS>[\n\s\t ]+)"
-MISMATCH = r"(?P<MISMATCH>.)"
 
+token_specification = [
+    ('NUMBER',      r'-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?'),
+    ('BOOLEAN',     r'true|false'),
+    ('NONE',        r'null|none|nil'),
+    ('STRING',      r'{}|{}'.format(
+                        r'"([^"\\]*|\\["\\bfnrt\/]|\\u[0-9a-f]{4})*"',
+                        r"'([^'\\]*|\\['\\bfnrt\/]|\\u[0-9a-f]{4})*'")),
+    ('LPAR',        r'\('),
+    ('RPAR',        r'\)'),
+    ('LBRACKET',    r'\['),
+    ('RBRACKET',    r'\]'),
+    ('NOTEQUAL',    r'\!=|\<\>'),
+    ('EQUAL',       r'='),
+    ('LTE',         r'\<='),
+    ('GTE',         r'\>='),
+    ('LT',          r'\<'),
+    ('GT',          r'\>'),
+    ('LIKE',        r'LIKE'),
+    ('MATCH',       r'MATCH'),
+    ('CONTAIN',     r'CONTAIN'),
+    ('IN',          r'IN'),
+    ('OR',          r'OR'),
+    ('AND',         r'AND'),
+    ('NOT',         r'NOT'),
+    ('COMMA',       r'\,'),
+    ('REGEXP',      r'/.*(?<!\\)/'),
+    ('WS',          r'[\n\s\t ]+'),
+    ('MISMATCH',    r'.'),
+]
 
-master_pattern = re.compile('|'.join([
-    NUMBER, BOOLEAN, NONE, STRING, LBRACKET,
-    LPAR, RPAR, RBRACKET,
-    NOTEQUAL, EQUAL, LTE, GTE, LT, GT, LIKE,
-    MATCH, IN, OR, AND, NOT, COMMA,
-    CONTAIN, REGEXP, WS, MISMATCH]), re.IGNORECASE)
+tok_regex = re.compile(
+    '|'.join('(?P<%s>%s)' % pair for pair in token_specification),
+    re.IGNORECASE)
 
-
-def gen_tokens(pattern, text):
-    scanner = pattern.scanner(text)
-    for match in iter(scanner.match, None):
-        token = Token(match.lastgroup, match.group())
-        if token.type == 'MISMATCH':
-            raise DQSyntaxError("Unexpected character %s at pos %d" % match.start())
-        yield token
+def gen_tokens(pattern, text, skip_ws=True):
+    for match in pattern.finditer(text):
+        tok_type = match.lastgroup
+        if tok_type == 'MISMATCH':
+            raise DQSyntaxError("Unexpected character at pos %d" % match.start())
+        if tok_type == 'WS' and skip_ws:
+            continue
+        value = match.group(tok_type)
+        yield Token(tok_type, value)
 
 
 """
@@ -95,14 +96,14 @@ statement :=  expression {OR|AND expression}
 expression := NOT expr | expr
 
 expr := ( statement )
-        | key != | <= | >= | < | > | == object
-        | key IN array
+        | key != | <= | >= | < | > | == value
+        | key IN ARRAY | STRING
         | key LIKE STRING
         | key MATCH STRING
         | key CONTAIN ARRAY | STRING
 
 key := STRING
-value := array | BOOLEAN | STRING | NUMBER | NONE | REGEXP
+value := ARRAY | BOOLEAN | STRING | NUMBER | NONE | REGEXP
 array := [ ] | [ value {, value} ]
 """
 
@@ -124,8 +125,7 @@ BINARY_OPS = ('IN', 'NOTEQUAL', 'LTE', 'GTE', 'LT', 'GT',
 class DictQueryParser:
 
     def parse(self, text):
-        self.tokens = (token for token in gen_tokens(master_pattern, text)
-                       if token.type != 'WS')
+        self.tokens = gen_tokens(tok_regex, text)
         self.tok = None
         self.nexttok = None
         self._advance()

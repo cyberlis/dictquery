@@ -21,7 +21,8 @@ class TestMatchDict(unittest.TestCase):
             ['cyberlis']
         )
         self.assertEqual(
-            get_dict_value({'user': {'fullname': {'firstname': 'cyberlis'}}}, 'user.fullname.firstname'),
+            get_dict_value({'user': {'fullname': {'firstname': 'cyberlis'}}},
+                           'user.fullname.firstname'),
             ['cyberlis']
         )
         self.assertEqual(
@@ -108,10 +109,10 @@ class TestMatchDict(unittest.TestCase):
         self.assertFalse(match({'username': 'test_admin_username'}, '"username" LIKE "test"'))
 
     def test_match(self):
-        self.assertTrue(match({'username': 'test_admin_username'}, '"username" MATCH /.*admin.*/'))
-        self.assertTrue(match({'username': 'test_admin_username'}, '"username" MATCH /test.*/'))
-        self.assertTrue(match({'age': '98'}, '"age" MATCH /\d+/'))
-        self.assertFalse(match({'username': 'test_admin_username'}, '"username" MATCH /qwerty/'))
+        self.assertTrue(match({'username': 'test_admin_username'}, r'"username" MATCH /.*admin.*/'))
+        self.assertTrue(match({'username': 'test_admin_username'}, r'"username" MATCH /test.*/'))
+        self.assertTrue(match({'age': '98'}, r'"age" MATCH /\d+/'))
+        self.assertFalse(match({'username': 'test_admin_username'}, r'"username" MATCH /qwerty/'))
 
     def test_contain(self):
         self.assertTrue(match({'roles': ['admin', 'observer']}, '"roles" CONTAIN "admin"'))
@@ -134,9 +135,11 @@ class TestMatchDict(unittest.TestCase):
         self.assertEqual(_eval_token(Token('STRING', '"hello"')), 'hello')
         self.assertEqual(_eval_token(Token('STRING', '"world"')), 'world')
         self.assertEqual(_eval_token(Token('ARRAY', [Token('STRING', '"hello"'), Token('NUMBER', 12),
-                                                    Token('BOOLEAN', 'true'), Token('NONE', 'none'),])),
+                                                     Token('BOOLEAN', 'true'), Token('NONE', 'none'),])),
                          ['hello', 12, True, None])
-        self.assertEqual(_eval_token(Token('REGEXP', '/[abcd]+\d\s*finish/')).pattern, r'[abcd]+\d\s*finish')
+        self.assertEqual(
+            _eval_token(Token('REGEXP', r'/[abcd]+\d\s*finish/')).pattern,
+            r'[abcd]+\d\s*finish')
 
 
 if __name__ == '__main__':
