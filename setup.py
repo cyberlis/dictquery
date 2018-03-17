@@ -74,6 +74,7 @@ setup(
     include_package_data=True,
     license='MIT',
     classifiers=[
+        'Development Status :: 3 - Alpha',
         'License :: OSI Approved :: MIT License',
         'Intended Audience :: Developers',
         'Operating System :: POSIX :: Linux',
