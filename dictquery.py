@@ -1,4 +1,5 @@
 from collections import namedtuple
+from datetime import datetime
 import fnmatch
 import logging
 import operator
@@ -45,8 +46,9 @@ Token = namedtuple('Token', ['type', 'value'])
 
 token_specification = [
     ('NUMBER',      r'-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?'),
-    ('BOOLEAN',     r'true|false'),
-    ('NONE',        r'null|none|nil'),
+    ('BOOLEAN',     r'TRUE|FALSE'),
+    ('NONE',        r'NULL|NONE|NIL'),
+    ('NOW',         r'NOW'),
     ('STRING',      r'{}|{}'.format(
                         r'"([^"\\]*|\\["\\bfnrt\/]|\\u[0-9a-f]{4})*"',
                         r"'([^'\\]*|\\['\\bfnrt\/]|\\u[0-9a-f]{4})*'")),
@@ -103,7 +105,7 @@ expr := ( statement )
         | key CONTAIN ARRAY | STRING
 
 key := STRING
-value := ARRAY | BOOLEAN | STRING | NUMBER | NONE | REGEXP
+value := ARRAY | BOOLEAN | STRING | NUMBER | NONE | NOW | REGEXP
 array := [ ] | [ value {, value} ]
 """
 
@@ -119,7 +121,7 @@ operations_map = {
 
 BINARY_OPS = ('IN', 'NOTEQUAL', 'LTE', 'GTE', 'LT', 'GT',
               'EQUAL', 'MATCH', 'LIKE', 'CONTAIN')
-
+VALUES = ('BOOLEAN', 'NUMBER', 'NONE', 'NOW', 'STRING', 'REGEXP')
 
 
 class DictQueryParser:
@@ -187,7 +189,7 @@ class DictQueryParser:
 
 
     def value(self):
-        if self._accept(('BOOLEAN', 'NUMBER', 'NONE', 'STRING', 'REGEXP')):
+        if self._accept(VALUES):
             return self.tok
 
         if self.nexttok.type == 'LBRACKET':
@@ -266,6 +268,8 @@ def _eval_token(token):
         return token.value[1:-1]
     if token.type == 'NONE':
         return None
+    if token.type == 'NOW':
+        return datetime.utcnow()
     if token.type == 'REGEXP':
         return re.compile(token.value[1:-1], re.IGNORECASE)
     if token.type == 'ARRAY':

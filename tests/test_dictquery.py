@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
-
-from dictquery import (
-    Token, DictQueryParser, get_dict_value, DQKeyError, match, _eval_token)
+from datetime import datetime, timedelta
 import unittest
+from dictquery import (
+    Token, DictQueryParser,
+    get_dict_value, match, _eval_token,
+    DQKeyError, DQSyntaxError,)
 
 
 class TestMatchDict(unittest.TestCase):
@@ -118,12 +120,38 @@ class TestMatchDict(unittest.TestCase):
         self.assertTrue(match({'roles': ['admin', 'observer']}, '"roles" CONTAIN "admin"'))
         self.assertFalse(match({'roles': ['admin', 'observer']}, '"roles" CONTAIN "user"'))
 
+    def test_now(self):
+        utcnow = datetime.utcnow()
+        self.assertTrue(
+            match({'time': utcnow - timedelta(hours=1)},
+            "'time' < NOW"))
+        self.assertFalse(
+            match({'time': utcnow - timedelta(hours=1)},
+            "'time' = NOW"))
+
     def test_only_keys(self):
         self.assertTrue(match({'username': 'cyberlis', 'age': 26}, "'username' AND 'age'"))
         self.assertTrue(match({'username': 'cyberlis', 'age': 26}, "'username'"))
         self.assertFalse(match({'username': 'cyberlis', 'age': 0}, "'age'"))
         self.assertFalse(match({'username': 'cyberlis'}, "'age'"))
         self.assertFalse(match({'username': 'cyberlis', 'age': 0}, "'username' AND 'age'"))
+
+    def test_pars(self):
+        data = {'a': 1, 'b': 0, 'c': 1, 'x': 0, 'y': 1, 'z': 0}
+        self.assertTrue(match(data, "('a') AND ('c')"))
+        self.assertTrue(match(data, "(('a') AND ('c'))"))
+        self.assertTrue(match(data, "(((('a')) AND (('c'))))"))
+        with self.assertRaises(DQSyntaxError):
+            self.assertTrue(match(data, "('a') AND ('c'"))
+        with self.assertRaises(DQSyntaxError):
+            self.assertTrue(match(data, ")'a' AND 'c'"))
+
+    def test_eval_order(self):
+        data = {'a': 1, 'b': 0, 'c': 1, 'x': 0, 'y': 1, 'z': 0}
+        self.assertTrue(match(data, "'a' = 1 OR 'c' = 0"))
+        self.assertFalse(match(data, "'a' = 0 AND 'c' = 1"))
+        self.assertTrue(match(data, "'a' = 0 AND 'c' = 1 OR 'z' = 0"))
+        self.assertFalse(match(data, "'a' = 0 AND ('c' = 1 OR 'z' = 0)"))
 
     def test_eval_token(self):
         self.assertEqual(_eval_token(Token('NUMBER', '34')), 34)
