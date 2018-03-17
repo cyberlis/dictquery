@@ -65,6 +65,19 @@ class TestMatchDict(unittest.TestCase):
             ['rinagorsha', 'cyberlis']
         )
         with self.assertRaises(DQKeyError):
+            get_dict_value({'user.username': 'cyberlis'},
+                            'user.username',
+                            raise_keyerror=True,
+                            use_nested_keys=True)
+
+        self.assertEqual(
+            get_dict_value({'user.username': 'cyberlis'},
+                           'user.username',
+                           raise_keyerror=True,
+                           use_nested_keys=False),
+            ['cyberlis']
+        )
+        with self.assertRaises(DQKeyError):
             get_dict_value({'users': [{'fullname': {'lastname': 'cyberlis'}},]},
                            'users.fullname.firstname', raise_keyerror=True)
 
