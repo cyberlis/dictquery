@@ -57,7 +57,7 @@ token_specification = [
     ('LBRACKET',    r'\['),
     ('RBRACKET',    r'\]'),
     ('NOTEQUAL',    r'\!=|\<\>'),
-    ('EQUAL',       r'='),
+    ('EQUAL',       r'=='),
     ('LTE',         r'\<='),
     ('GTE',         r'\>='),
     ('LT',          r'\<'),
