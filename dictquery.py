@@ -350,10 +350,20 @@ class DictQuery:
         return self._eval_expr(query_dict, self.ast)
 
 
-def compile(query, use_nested_keys=True, key_separator='.', raise_keyerror=False):
+def compile(query, use_nested_keys=True,
+            key_separator='.', raise_keyerror=False):
     return DictQuery(query, use_nested_keys, key_separator, raise_keyerror)
 
 
 def match(query_dict, query):
     dq = DictQuery(query)
     return dq.match(query_dict)
+
+
+def filter(data, query, use_nested_keys=True,
+           key_separator='.', raise_keyerror=False):
+    dq = DictQuery(query, use_nested_keys, key_separator, raise_keyerror)
+    for item in data:
+        if not dq.match(item):
+            continue
+        yield item
