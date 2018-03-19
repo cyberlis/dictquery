@@ -259,19 +259,22 @@ def get_dict_value(query_dict, dict_key, use_nested_keys=True,
     return result
 
 
-def _eval_token(token):
+def _eval_token(token, case_sensitive=True):
     if token.type == 'NUMBER':
         return float(token.value)
     if token.type == 'BOOLEAN':
         return token.value.lower() == 'true'
     if token.type == 'STRING':
-        return token.value[1:-1]
+        return token.value[1:-1] if case_sensitive else token.value[1:-1].lower()
     if token.type == 'NONE':
         return None
     if token.type == 'NOW':
         return datetime.utcnow()
     if token.type == 'REGEXP':
-        return re.compile(token.value[1:-1], re.IGNORECASE)
+        if case_sensitive:
+            return re.compile(token.value[1:-1])
+        else:
+            return re.compile(token.value[1:-1], re.IGNORECASE)
     if token.type == 'ARRAY':
         arr = []
         for arr_tok in token.value:
@@ -280,12 +283,14 @@ def _eval_token(token):
 
 
 class DictQuery:
-    def __init__(self, query, use_nested_keys=True, key_separator='.', raise_keyerror=False):
+    def __init__(self, query, use_nested_keys=True,
+                 case_sensitive=True, key_separator='.',
+                 raise_keyerror=False):
         self.query = query
         self.use_nested_keys = use_nested_keys
         self.key_separator = key_separator
         self.raise_keyerror = raise_keyerror
-        self.default_value = None
+        self.case_sensitive = case_sensitive
         self.parser = DictQueryParser()
         self.ast = self.parser.parse(self.query)
         logger.debug("AST: {}".format(self.ast))
@@ -296,16 +301,16 @@ class DictQuery:
             query_dict, dict_key, self.use_nested_keys,
             self.key_separator, self.raise_keyerror)
 
-    def _calc_expr(self, query_dict, op, left, right, raise_keyerror=False):
+    def _calc_expr(self, query_dict, op, left, right):
         if left.type != 'KEY':
             raise DQEvalutionError("Expected dict key but got {} {}".format(left.type, left.value))
 
         dict_value = self._get_dict_value(query_dict, left.value)
         compare_value = _eval_token(right)
-        if not dict_value:
-            return self.default_value
         result = []
         for value in dict_value:
+            if isinstance(value, str) and not self.case_sensitive:
+                value = value.lower()
             if op.type in operations_map:
                 result.append(operations_map[op.type](value, compare_value))
             if op.type == 'IN':

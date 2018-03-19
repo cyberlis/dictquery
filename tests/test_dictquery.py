@@ -82,11 +82,11 @@ class TestMatchDict(unittest.TestCase):
                            'users.fullname.firstname', raise_keyerror=True)
 
     def test_not(self):
-        self.assertTrue(match({'age': 18}, 'NOT "age" = 12'))
+        self.assertTrue(match({'age': 18}, 'NOT "age" == 12'))
 
     def test_equal(self):
-        self.assertTrue(match({'age': 18}, '"age" = 18'))
-        self.assertFalse(match({'age': 18}, '"age" = 12'))
+        self.assertTrue(match({'age': 18}, '"age" == 18'))
+        self.assertFalse(match({'age': 18}, '"age" == 12'))
 
     def test_notequal(self):
         self.assertTrue(match({'age': 18}, '"age" != 12'))
@@ -140,7 +140,7 @@ class TestMatchDict(unittest.TestCase):
             "'time' < NOW"))
         self.assertFalse(
             match({'time': utcnow - timedelta(hours=1)},
-            "'time' = NOW"))
+            "'time' == NOW"))
 
     def test_only_keys(self):
         self.assertTrue(match({'username': 'cyberlis', 'age': 26}, "'username' AND 'age'"))
@@ -161,10 +161,10 @@ class TestMatchDict(unittest.TestCase):
 
     def test_eval_order(self):
         data = {'a': 1, 'b': 0, 'c': 1, 'x': 0, 'y': 1, 'z': 0}
-        self.assertTrue(match(data, "'a' = 1 OR 'c' = 0"))
-        self.assertFalse(match(data, "'a' = 0 AND 'c' = 1"))
-        self.assertTrue(match(data, "'a' = 0 AND 'c' = 1 OR 'z' = 0"))
-        self.assertFalse(match(data, "'a' = 0 AND ('c' = 1 OR 'z' = 0)"))
+        self.assertTrue(match(data, "'a' == 1 OR 'c' == 0"))
+        self.assertFalse(match(data, "'a' == 0 AND 'c' == 1"))
+        self.assertTrue(match(data, "'a' == 0 AND 'c' == 1 OR 'z' == 0"))
+        self.assertFalse(match(data, "'a' == 0 AND ('c' == 1 OR 'z' == 0)"))
 
     def test_eval_token(self):
         self.assertEqual(_eval_token(Token('NUMBER', '34')), 34)
