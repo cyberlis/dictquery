@@ -4,7 +4,7 @@ import unittest
 from dictquery import (
     Token, DictQueryParser,
     get_dict_value, match, _eval_token,
-    DQKeyError, DQSyntaxError,)
+    DQKeyError, DQSyntaxError, DictQuery)
 
 
 class TestMatchDict(unittest.TestCase):
@@ -165,6 +165,26 @@ class TestMatchDict(unittest.TestCase):
         self.assertFalse(match(data, "'a' == 0 AND 'c' == 1"))
         self.assertTrue(match(data, "'a' == 0 AND 'c' == 1 OR 'z' == 0"))
         self.assertFalse(match(data, "'a' == 0 AND ('c' == 1 OR 'z' == 0)"))
+
+    def test_case_sensitive(self):
+        data = {'username': 'CybeRLiS'}
+        dq_case_sensitive = DictQuery("'username' == 'cyberlis'", case_sensitive=True)
+        dq_case_insensitive = DictQuery("'username' == 'cyberlis'", case_sensitive=False)
+        self.assertFalse(dq_case_sensitive.match(data))
+        self.assertTrue(dq_case_insensitive.match(data))
+        dq_cis_in = DictQuery(
+            "'username' IN ['cybeRLIS', 'rinagorhs']",
+            case_sensitive=False)
+        self.assertTrue(dq_cis_in.match(data))
+        dq_cs_match = DictQuery(r"'username' MATCH /cyberlis/", case_sensitive=True)
+        dq_cis_match = DictQuery(r"'username' MATCH /cyberlis/", case_sensitive=False)
+        self.assertFalse(dq_cs_match.match(data))
+        self.assertTrue(dq_cis_match.match(data))
+
+        dq_cs_like = DictQuery(r"'username' LIKE 'cyberlis'", case_sensitive=True)
+        dq_cis_like = DictQuery(r"'username' LIKE 'cyberlis'", case_sensitive=False)
+        self.assertFalse(dq_cs_like.match(data))
+        self.assertTrue(dq_cis_like.match(data))
 
     def test_eval_token(self):
         self.assertEqual(_eval_token(Token('NUMBER', '34')), 34)

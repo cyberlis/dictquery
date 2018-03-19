@@ -278,13 +278,13 @@ def _eval_token(token, case_sensitive=True):
     if token.type == 'ARRAY':
         arr = []
         for arr_tok in token.value:
-            arr.append(_eval_token(arr_tok))
+            arr.append(_eval_token(arr_tok, case_sensitive))
         return arr
 
 
 class DictQuery:
     def __init__(self, query, use_nested_keys=True,
-                 case_sensitive=True, key_separator='.',
+                 key_separator='.', case_sensitive=True,
                  raise_keyerror=False):
         self.query = query
         self.use_nested_keys = use_nested_keys
@@ -306,7 +306,7 @@ class DictQuery:
             raise DQEvalutionError("Expected dict key but got {} {}".format(left.type, left.value))
 
         dict_value = self._get_dict_value(query_dict, left.value)
-        compare_value = _eval_token(right)
+        compare_value = _eval_token(right, self.case_sensitive)
         result = []
         for value in dict_value:
             if isinstance(value, str) and not self.case_sensitive:
@@ -316,7 +316,7 @@ class DictQuery:
             if op.type == 'IN':
                 result.append((value in compare_value))
             if op.type == 'LIKE':
-                result.append(fnmatch.fnmatch(value, compare_value))
+                result.append(fnmatch.fnmatchcase(value, compare_value))
             if op.type == 'MATCH':
                 result.append(compare_value.match(value) is not None)
         return any(result)
@@ -356,8 +356,12 @@ class DictQuery:
 
 
 def compile(query, use_nested_keys=True,
-            key_separator='.', raise_keyerror=False):
-    return DictQuery(query, use_nested_keys, key_separator, raise_keyerror)
+            key_separator='.', case_sensitive=True,
+            raise_keyerror=False):
+    return DictQuery(
+        query, use_nested_keys=use_nested_keys,
+        key_separator=key_separator, case_sensitive=case_sensitive,
+        raise_keyerror=raise_keyerror)
 
 
 def match(query_dict, query):
@@ -366,8 +370,12 @@ def match(query_dict, query):
 
 
 def filter(data, query, use_nested_keys=True,
-           key_separator='.', raise_keyerror=False):
-    dq = DictQuery(query, use_nested_keys, key_separator, raise_keyerror)
+           key_separator='.', case_sensitive=True,
+           raise_keyerror=False):
+    dq = DictQuery(
+        query, use_nested_keys=use_nested_keys,
+        key_separator=key_separator, case_sensitive=case_sensitive,
+        raise_keyerror=raise_keyerror)
     for item in data:
         if not dq.match(item):
             continue
