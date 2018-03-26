@@ -4,61 +4,17 @@ DictQuery
 Library to query python dicts
 
 
-Suppose we have a dictionary like this:
+Several syntax examples:
 
 ```
-from datetime import datetime
-data = {
-  "_id": 10,
-  "isActive": False,
-  "age": 27,
-  "eyeColor": "green",
-  "name": {
-    "firstname": "Marion",
-    "secondname": "Delgado",
-  },
-  "gender": "female",
-  "email": "mariondelgado@bleendot.com",
-  "registered": datetime.strptime("2015-03-29T06:07:58", "%Y-%m-%dT%H:%M:%S"),
-  "latitude": 74.785608,
-  "longitude": -112.366088,
-  "tags": [
-    "voluptate",
-    "ex",
-    "dolor",
-    "aute"
-  ],
-  "user.address": "155 Village Road, Enetai, Puerto Rico, 2634",
-  "friends": [
-    {
-      "id": 0,
-      "name": {
-        "firstname": "Ratliff",
-        "secondname": "Becker",
-      },
-      "age": 27,
-      "eyeColor": "green"
-    },
-    {
-      "id": 1,
-      "name": {
-        "firstname": "Raymond",
-        "secondname": "Albert",
-      },
-      "age": 19,
-      "eyeColor": "brown"
-    },
-    {
-      "id": 2,
-      "name": {
-        "firstname": "Mavis",
-        "secondname": "Sheppard",
-      },
-      "age": 34,
-      "eyeColor": "blue"
-    }
-  ]
-}
+"`age` >= 12"
+"`user.name` == 'cyberlis'"
+"`user.email` MATCH /\w+@\w+\.com/ AND `age` != 11"
+"`user.frinds.age` > 12 AND `user.friends.name` LIKE 'Ra*ond'"
+"`email` LIKE 'mariondelgado?bleendot?com'"
+"`eyeColor` IN ['blue', 'green', 'black']"
+"`isActive` AND (`gender` == 'female' OR `age` == 27)"
+"`latitude` != `longitude`"
 ```
 
 Supported data types
@@ -275,4 +231,64 @@ You can use parentheses to group statements or change evalution order
 True
 >>> dq.match(data, "`isActive` AND (`gender` == 'female' OR `age` == 27)")
 False
+```
+
+
+Data for examples above:
+=================
+
+
+```
+from datetime import datetime
+data = {
+  "_id": 10,
+  "isActive": False,
+  "age": 27,
+  "eyeColor": "green",
+  "name": {
+    "firstname": "Marion",
+    "secondname": "Delgado",
+  },
+  "gender": "female",
+  "email": "mariondelgado@bleendot.com",
+  "registered": datetime.strptime("2015-03-29T06:07:58", "%Y-%m-%dT%H:%M:%S"),
+  "latitude": 74.785608,
+  "longitude": -112.366088,
+  "tags": [
+    "voluptate",
+    "ex",
+    "dolor",
+    "aute"
+  ],
+  "user.address": "155 Village Road, Enetai, Puerto Rico, 2634",
+  "friends": [
+    {
+      "id": 0,
+      "name": {
+        "firstname": "Ratliff",
+        "secondname": "Becker",
+      },
+      "age": 27,
+      "eyeColor": "green"
+    },
+    {
+      "id": 1,
+      "name": {
+        "firstname": "Raymond",
+        "secondname": "Albert",
+      },
+      "age": 19,
+      "eyeColor": "brown"
+    },
+    {
+      "id": 2,
+      "name": {
+        "firstname": "Mavis",
+        "secondname": "Sheppard",
+      },
+      "age": 34,
+      "eyeColor": "blue"
+    }
+  ]
+}
 ```

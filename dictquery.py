@@ -8,7 +8,7 @@ import re
 import unittest
 
 
-__version__ = '0.1.0'
+__version__ = '0.2.0'
 
 
 LOG_FORMAT = "%(asctime)-15s %(levelname)-8s %(name)-5s [%(filename)s:%(lineno)d]: %(message)s"
