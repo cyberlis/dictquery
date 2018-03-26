@@ -52,6 +52,7 @@ token_specification = [
     ('STRING',      r'{}|{}'.format(
                         r'"([^"\\]*|\\["\\bfnrt\/]|\\u[0-9a-f]{4})*"',
                         r"'([^'\\]*|\\['\\bfnrt\/]|\\u[0-9a-f]{4})*'")),
+    ('KEY',         r'`([^`\\]*|\\[`\\bfnrt\/]|\\u[0-9a-f]{4})*`'),
     ('LPAR',        r'\('),
     ('RPAR',        r'\)'),
     ('LBRACKET',    r'\['),
@@ -180,7 +181,19 @@ class DictQueryParser:
             self._expect('RPAR')
             return obj
 
-        leftval = self.dictkey()
+        leftval = self.value()
+        if self._accept('MATCH'):
+            op = self.tok
+            self._expect('REGEXP')
+            rightval = self.tok
+            return (op, leftval, rightval)
+
+        if self._accept('LIKE'):
+            op = self.tok
+            self._expect('STRING')
+            rightval = self.tok
+            return (op, leftval, rightval)
+
         if self._accept(BINARY_OPS):
             op = self.tok
             rightval = self.value()
@@ -189,6 +202,9 @@ class DictQueryParser:
 
 
     def value(self):
+        if self._accept('KEY'):
+            return Token('KEY', self.tok.value[1:-1])
+
         if self._accept(VALUES):
             return self.tok
 
@@ -208,11 +224,6 @@ class DictQueryParser:
             result.append(self.value())
         self._expect('RBRACKET')
         return Token('ARRAY', result)
-
-
-    def dictkey(self):
-        self._expect('STRING')
-        return Token('KEY', self.tok.value[1:-1])
 
 
 def get_dict_value(query_dict, dict_key, use_nested_keys=True,
@@ -280,6 +291,7 @@ def _eval_token(token, case_sensitive=True):
         for arr_tok in token.value:
             arr.append(_eval_token(arr_tok, case_sensitive))
         return arr
+    raise DQEvalutionError('Unexpected token {} {}'.format(token.type, token.value))
 
 
 class DictQuery:
@@ -302,23 +314,40 @@ class DictQuery:
             self.key_separator, self.raise_keyerror)
 
     def _calc_expr(self, query_dict, op, left, right):
-        if left.type != 'KEY':
-            raise DQEvalutionError("Expected dict key but got {} {}".format(left.type, left.value))
+        left_value, right_value = None, None
+        if left.type != 'KEY' and right.type != 'KEY':
+            raise DQEvalutionError("Requared dict key in expression")
+        if left.type == 'KEY':
+            left_value = self._get_dict_value(query_dict, left.value)
+        else:
+            left_value = _eval_token(left, self.case_sensitive)
 
-        dict_value = self._get_dict_value(query_dict, left.value)
-        compare_value = _eval_token(right, self.case_sensitive)
+        if right.type == 'KEY':
+            right_value = self._get_dict_value(query_dict, right.value)
+        else:
+            right_value = _eval_token(right, self.case_sensitive)
+
         result = []
-        for value in dict_value:
-            if isinstance(value, str) and not self.case_sensitive:
-                value = value.lower()
+        if left.type == 'KEY' and right.type == 'KEY':
+            for left_item in left_value:
+                for right_item in right_value:
+                    result.append(operations_map[op.type](left_item, right_item))
+            return any(result)
+
+        for item in (left_value if left.type == 'KEY' else right_value):
+            if isinstance(item, str) and not self.case_sensitive:
+                item = item.lower()
+            left_item = item if left.type == 'KEY' else left_value
+            right_item = item if right.type == 'KEY' else right_value
+
             if op.type in operations_map:
-                result.append(operations_map[op.type](value, compare_value))
+                result.append(operations_map[op.type](left_item, right_item))
             if op.type == 'IN':
-                result.append((value in compare_value))
+                result.append((left_item in right_item))
             if op.type == 'LIKE':
-                result.append(fnmatch.fnmatchcase(value, compare_value))
+                result.append(fnmatch.fnmatchcase(left_item, right_item))
             if op.type == 'MATCH':
-                result.append(compare_value.match(value) is not None)
+                result.append(right_item.match(left_item) is not None)
         return any(result)
 
 
