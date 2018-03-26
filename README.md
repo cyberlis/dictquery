@@ -65,6 +65,7 @@ Supported data types
 ====================
 | type | example |
 |-----------|---------|
+| KEY       | \`name\`, \`age\` |
 | NUMBER    | 42, -12, 34.7 |
 | STRING    | 'hello', "hellow" |
 | BOOLEAN   | true, false |
@@ -76,17 +77,15 @@ Supported data types
 
 Dict keys
 ===========
-Dict keys literals are written in a variety of ways:
-* Single quotes: 'allows embedded "double" quotes'
-* Double quotes: "allows embedded 'single' quotes".
+Dict keys use back-ticks (\`\`)
 
 DictQuery supports nested dicts splited by dot `.` or any separator specified in `key_separator` param. Default `key_separator='.'`
 
 ```
 >>> import dictquery as dq
->>> dq.match(data, "'friends.age' <= 26")
+>>> dq.match(data, "`friends.age` <= 26")
 True
->>> compiled = dq.compile("'friends/age' <= 26", key_separator='/')
+>>> compiled = dq.compile("`friends/age` <= 26", key_separator='/')
 >>> compiled.match(data)
 True
 ```
@@ -95,9 +94,9 @@ if you don't need nested keys parsing and want get keys as is or if your keys co
 
 ```
 >>> import dictquery as dq
->>> dq.match(data, "'user.address'")
+>>> dq.match(data, "`user.address`")
 False
->>> compiled = dq.compile("'user.address'", use_nested_keys=False)
+>>> compiled = dq.compile("`user.address`", use_nested_keys=False)
 >>> compiled.match(data)
 True
 ```
@@ -106,9 +105,9 @@ In query you can use dict keys 'as is' without any binary operation. DictQuery w
 
 ```
 >>> import dictquery as dq
->>> dq.match(data, "'isActive'")
+>>> dq.match(data, "`isActive`")
 False
->>> dq.match(data, "'isActive' == false")
+>>> dq.match(data, "`isActive` == false")
 True
 ```
 
@@ -116,9 +115,9 @@ if key is not found by default this situation evalutes to boolean `False` (no ex
 You can set `raise_keyerror=True` to raise keyerror if key would not be found.
 ```
 >>> import dictquery as dq
->>> dq.match(data, "'favoriteFruit'")
+>>> dq.match(data, "`favoriteFruit`")
 False
->>> compiled = dq.compile("'favoriteFruit'", raise_keyerror=True)
+>>> compiled = dq.compile("`favoriteFruit`", raise_keyerror=True)
 >>> compiled.match(data)
 Traceback (most recent call last):
   File "<stdin>", line 1, in <module>
@@ -150,19 +149,19 @@ Comparisons
 
 ```
 >>> import dictquery as dq
->>> dq.match(data, "'age' == 26")
+>>> dq.match(data, "`age` == 26")
 True
->>> dq.match(data, "'latitude' > 12")
+>>> dq.match(data, "`latitude` > 12")
 True
->>> dq.match(data, "'longitude' < 30")
+>>> dq.match(data, "`longitude` < 30")
 True
->>> dq.match(data, "'friends.age' <= 26")
+>>> dq.match(data, "`friends.age` <= 26")
 True
->>> dq.match(data, "'longitude' >= -130")
+>>> dq.match(data, "`longitude` >= -130")
 True
->>> dq.match(data, "'id' != 0")
+>>> dq.match(data, "`id` != 0")
 True
->>> dq.match(data, "'gender' == 'male'")
+>>> dq.match(data, "`gender` == 'male'")
 False
 ```
 
@@ -183,19 +182,19 @@ String literals are written in a variety of ways:
 < , <= , > , >= , == , != works same way with strings as python
 ```
 >>> import dictquery as dq
->>> dq.match(data, "'eyeColor' == 'green'")
+>>> dq.match(data, "`eyeColor` == 'green'")
 True
->>> dq.match(data, "'name.firstname' != 'Ratliff'")
+>>> dq.match(data, "`name.firstname` != 'Ratliff'")
 True
->>> dq.match(data, "'eyeColor' IN 'string with green color'")
+>>> dq.match(data, "`eyeColor` IN 'string with green color'")
 True
->>> dq.match(data, "'email' CONTAIN '.com'")
+>>> dq.match(data, "`email` CONTAIN '.com'")
 True
->>> dq.match(data, r"'email' MATCH /\w+@\w+\.\w+/")
+>>> dq.match(data, r"`email` MATCH /\w+@\w+\.\w+/")
 True
->>> dq.match(data, r"'email' LIKE 'mariondelgado@*'")
+>>> dq.match(data, r"`email` LIKE 'mariondelgado@*'")
 True
->>> dq.match(data, r"'email' LIKE 'mariondelgado?bleendot?com'")
+>>> dq.match(data, r"`email` LIKE 'mariondelgado?bleendot?com'")
 True
 ```
 
@@ -203,9 +202,9 @@ By default all string related operations are case sensitive. To change this beha
 
 ```
 >>> import dictquery as dq
->>> dq.match(data, "'name.firstname' == 'marion'")
+>>> dq.match(data, "`name.firstname` == 'marion'")
 False
->>> compiled = dq.compile("'name.firstname' == 'marion'", case_sensitive=False)
+>>> compiled = dq.compile("`name.firstname` == 'marion'", case_sensitive=False)
 >>> compiled.match(data)
 True
 ```
@@ -220,9 +219,9 @@ Array comparisons
 
 ```
 >>> import dictquery as dq
->>> dq.match(data, "'tags' CONTAIN 'dolor'")
+>>> dq.match(data, "`tags` CONTAIN 'dolor'")
 True
->>> dq.match(data, "'eyeColor' IN ['blue', 'green', 'black']")
+>>> dq.match(data, "`eyeColor` IN ['blue', 'green', 'black']")
 True
 ```
 
@@ -232,9 +231,9 @@ Key presence in dict
 
 ```
 >>> import dictquery as dq
->>> dq.match(data, "'name' CONTAIN 'firstname'")
+>>> dq.match(data, "`name` CONTAIN 'firstname'")
 True
->>> dq.match(data, "'name' CONTAIN 'thirdname'")
+>>> dq.match(data, "`name` CONTAIN 'thirdname'")
 False
 ```
 
@@ -245,9 +244,9 @@ Datetime comparisons with `NOW`
 dict item can be compared with `NOW` using standard operations (< , <= , > , >= , == , !=)
 ```
 >>> import dictquery as dq
->>> dq.match(data, "'registered' < NOW")
+>>> dq.match(data, "`registered` < NOW")
 True
->>> dq.match(data, "'registered' != NOW")
+>>> dq.match(data, "`registered` != NOW")
 True
 ```
 
@@ -261,19 +260,19 @@ Logical operators
 
 ```
 >>> import dictquery as dq
->>> dq.match(data, "'isActive' AND 'gender' == 'female'")
+>>> dq.match(data, "`isActive` AND `gender` == 'female'")
 False
->>> dq.match(data, "'isActive' OR 'gender' == 'female'")
+>>> dq.match(data, "`isActive` OR `gender` == 'female'")
 True
->>> dq.match(data, "NOT 'isActive' AND 'gender' == 'female'")
+>>> dq.match(data, "NOT `isActive` AND `gender` == 'female'")
 True
 ```
 
 You can use parentheses to group statements or change evalution order
 ```
 >>> import dictquery as dq
->>> dq.match(data, "'isActive' AND 'gender' == 'female' OR 'age' == 27")
+>>> dq.match(data, "`isActive` AND `gender` == 'female' OR `age` == 27")
 True
->>> dq.match(data, "'isActive' AND ('gender' == 'female' OR 'age' == 27)")
+>>> dq.match(data, "`isActive` AND (`gender` == 'female' OR `age` == 27)")
 False
 ```
