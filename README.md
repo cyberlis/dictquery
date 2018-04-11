@@ -10,7 +10,7 @@ Several syntax examples:
 "`age` >= 12"
 "`user.name` == 'cyberlis'"
 "`user.email` MATCH /\w+@\w+\.com/ AND `age` != 11"
-"`user.frinds.age` > 12 AND `user.friends.name` LIKE 'Ra*ond'"
+"`user.friends.age` > 12 AND `user.friends.name` LIKE 'Ra*ond'"
 "`email` LIKE 'mariondelgado?bleendot?com'"
 "`eyeColor` IN ['blue', 'green', 'black']"
 "`isActive` AND (`gender` == 'female' OR `age` == 27)"
