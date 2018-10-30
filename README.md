@@ -57,7 +57,7 @@ False
 True
 ```
 
-In query you can use dict keys 'as is' without any binary operation. DictQuery will get value by the key and evalute it to bool
+In query you can use dict keys 'as is' without any binary operation. DictQuery will get value by the key and evaluate it to bool
 
 ```
 >>> import dictquery as dq
@@ -67,7 +67,7 @@ False
 True
 ```
 
-if key is not found by default this situation evalutes to boolean `False` (no exception raised).
+if key is not found by default this situation evaluates to boolean `False` (no exception raised).
 You can set `raise_keyerror=True` to raise keyerror if key would not be found.
 ```
 >>> import dictquery as dq
@@ -77,15 +77,19 @@ False
 >>> compiled.match(data)
 Traceback (most recent call last):
   File "<stdin>", line 1, in <module>
-  File "dictquery.py", line 355, in match
-    return self._eval_expr(query_dict, self.ast)
-  File "dictquery.py", line 327, in _eval_expr
-    dict_value = self._get_dict_value(query_dict, tree.value)
-  File "dictquery.py", line 302, in _get_dict_value
+  File "/Users/dlisovik/dev/dictquery/dictquery/visitors.py", line 41, in match
+    return self.evaluate(data)
+  File "/Users/dlisovik/dev/dictquery/dictquery/visitors.py", line 35, in evaluate
+    result = bool(self.ast.accept(self))
+  File "/Users/dlisovik/dev/dictquery/dictquery/parsers.py", line 80, in accept
+    return visitor.visit_key(self)
+  File "/Users/dlisovik/dev/dictquery/dictquery/visitors.py", line 84, in visit_key
+    values=self._get_dict_value(expr.value),
+  File "/Users/dlisovik/dev/dictquery/dictquery/visitors.py", line 30, in _get_dict_value
     self.key_separator, self.raise_keyerror)
-  File "dictquery.py", line 258, in get_dict_value
-    raise DQKeyError("Key '%s' not found" % dict_key)
-dictquery.DQKeyError: "Key 'favoriteFruit' not found"
+  File "/Users/dlisovik/dev/dictquery/dictquery/datavalue.py", line 112, in query_value
+    raise DQKeyError("Key '{}' not found".format(data_key))
+dictquery.exceptions.DQKeyError: "Key 'favoriteFruit' not found"
 
 ```
 
@@ -133,7 +137,7 @@ String literals are written in a variety of ways:
 | MATCH     | regexp matching |
 | LIKE      | glob like matching |
 | IN        | dict item substring in string |
-| CONTAIN   | dict item substring contains string |
+| CONTAINS   | dict item substring contains string |
 
 < , <= , > , >= , == , != works same way with strings as python
 ```
@@ -144,7 +148,7 @@ True
 True
 >>> dq.match(data, "`eyeColor` IN 'string with green color'")
 True
->>> dq.match(data, "`email` CONTAIN '.com'")
+>>> dq.match(data, "`email` CONTAINS '.com'")
 True
 >>> dq.match(data, r"`email` MATCH /\w+@\w+\.\w+/")
 True
@@ -170,12 +174,12 @@ Array comparisons
 | Operation | Meaning |
 |-----------|---------|
 | IN        | dict item in array |
-| CONTAIN   | dict item contains matching item |
+| CONTAINS   | dict item contains matching item |
 
 
 ```
 >>> import dictquery as dq
->>> dq.match(data, "`tags` CONTAIN 'dolor'")
+>>> dq.match(data, "`tags` CONTAINS 'dolor'")
 True
 >>> dq.match(data, "`eyeColor` IN ['blue', 'green', 'black']")
 True
@@ -183,13 +187,13 @@ True
 
 Key presence in dict
 =====================
-`CONTAIN` can be used with dict items to check if key in dict
+`CONTAINS` can be used with dict items to check if key in dict
 
 ```
 >>> import dictquery as dq
->>> dq.match(data, "`name` CONTAIN 'firstname'")
+>>> dq.match(data, "`name` CONTAINS 'firstname'")
 True
->>> dq.match(data, "`name` CONTAIN 'thirdname'")
+>>> dq.match(data, "`name` CONTAINS 'thirdname'")
 False
 ```
 
@@ -224,7 +228,7 @@ True
 True
 ```
 
-You can use parentheses to group statements or change evalution order
+You can use parentheses to group statements or change evaluation order
 ```
 >>> import dictquery as dq
 >>> dq.match(data, "`isActive` AND `gender` == 'female' OR `age` == 27")
