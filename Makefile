@@ -8,6 +8,9 @@ clean:
 	rm -f output.xml
 	rm -f coverage.xml
 	rm -f xunit*.xml
+	rm -rf *.egg-info
+	rm -rf dist/
+	rm -rf build/
 	rm -rf cover
 
 init:
