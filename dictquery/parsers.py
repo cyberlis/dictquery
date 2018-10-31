@@ -258,7 +258,8 @@ class DataQueryParser:
 
     def value(self):
         if self._accept('KEY'):
-            return token_to_class['KEY'](self.tok.value[1:-1])
+            value = self.tok.value[1:-1] if self.tok.value[0] == "`" else self.tok.value
+            return token_to_class['KEY'](value)
 
         if self._accept('STRING'):
             return token_to_class['STRING'](self.tok.value[1:-1])
