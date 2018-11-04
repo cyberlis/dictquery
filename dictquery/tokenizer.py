@@ -13,7 +13,6 @@ token_specification = [
     ('STRING',      r'{}|{}'.format(
                         r'"([^"\\]*|\\["\\bfnrt\/]|\\u[0-9a-f]{4})*"',
                         r"'([^'\\]*|\\['\\bfnrt\/]|\\u[0-9a-f]{4})*'")),
-    ('KEY',         r'`([^`\\]*|\\[`\\bfnrt\/]|\\u[0-9a-f]{4})*`'),
     ('LPAR',        r'\('),
     ('RPAR',        r'\)'),
     ('LBRACKET',    r'\['),
@@ -26,13 +25,14 @@ token_specification = [
     ('GT',          r'\>'),
     ('LIKE',        r'LIKE'),
     ('MATCH',       r'MATCH'),
-    ('CONTAINS',     r'CONTAINS|CONTAIN'),
+    ('CONTAINS',    r'CONTAINS|CONTAIN'),
     ('IN',          r'IN'),
     ('OR',          r'OR'),
     ('AND',         r'AND'),
     ('NOT',         r'NOT'),
     ('COMMA',       r'\,'),
     ('REGEXP',      r'/.*(?<!\\)/'),
+    ('KEY',         r'[a-zA-Z_][a-zA-Z0-9_]*|`([^`\\]*|\\[`\\bfnrt\/]|\\u[0-9a-f]{4})*`'),
     ('WS',          r'[\n\s\t ]+'),
     ('MISMATCH',    r'.'),
 ]
