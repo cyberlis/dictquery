@@ -47,12 +47,14 @@ class TestDataQueryVisitor(unittest.TestCase):
 
     def test_visit_key(self):
         parser = DataQueryParser()
-        ast1 = parser.parse('`hello`')
-        ast2 = parser.parse('`world`')
+        ast1 = parser.parse('hello')
+        ast2 = parser.parse('world')
+        ast3 = parser.parse('`qwerty.x`')
         dqv = DataQueryVisitor(ast1)
-        dqv.data = {'hello': 'world'}
+        dqv.data = {'hello': 'world', 'qwerty': {'x': 42}}
         self.assertEqual(ast1.accept(dqv).values, ["world"])
         self.assertEqual(ast2.accept(dqv).values, [])
+        self.assertEqual(ast3.accept(dqv).values, [42])
 
     def test_visit_regexp(self):
         parser = DataQueryParser()

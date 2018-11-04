@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime, timedelta
 import unittest
+from dictquery.exceptions import DQSyntaxError
 from dictquery.parsers import (
     DataQueryParser, NumberExpression, BooleanExpression, NoneExpression,
     NowExpression, StringExpression, KeyExpression, ArrayExpression,
@@ -16,11 +17,23 @@ class TestVisitorParser(unittest.TestCase):
         result = parser.parse('')
         self.assertIsNone(result)
 
-    def test_parse_key(self):
+    def test_parse_backtick_key(self):
         parser = DataQueryParser()
         result = parser.parse('`key1`')
         self.assertIsInstance(result, KeyExpression)
         self.assertEqual(result.value, 'key1')
+
+        result = parser.parse('`key1.key2.key3`')
+        self.assertIsInstance(result, KeyExpression)
+        self.assertEqual(result.value, 'key1.key2.key3')
+
+    def test_parse_key(self):
+        parser = DataQueryParser()
+        result = parser.parse('key1')
+        self.assertIsInstance(result, KeyExpression)
+        self.assertEqual(result.value, 'key1')
+        with self.assertRaises(DQSyntaxError):
+            result = parser.parse('key1.key2.key3')
 
     def test_parse_number(self):
         parser = DataQueryParser()
