@@ -2,7 +2,7 @@ from dictquery.visitors import DataQueryVisitor, MongoQueryVisitor
 from dictquery.parsers import DataQueryParser
 from dictquery.datavalue import query_value
 
-__version__ = '0.3.0'
+__version__ = '0.4.0'
 parser = DataQueryParser()
 
 
