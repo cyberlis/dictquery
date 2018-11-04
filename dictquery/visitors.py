@@ -3,11 +3,101 @@ import fnmatch
 import operator
 import re
 
-from dictquery.exceptions import DQException, DQEvaluationError
+from dictquery.exceptions import DQException, DQEvaluationError, DQValidationError
 from dictquery.datavalue import query_value, DataQueryItem
 from dictquery.parsers import (
     DataQueryParser, AndExpression, OrExpression, NotExpression,
     KeyExpression, VALUE_EXPRESSIONS)
+
+
+class KeyExistenceValidatorVisitor:
+    """Validates query to  have KEY literal"""
+    def __init__(self, ast):
+        self.ast = ast
+
+    def evaluate(self):
+        """Returns True if ast is valid"""
+        if self.ast is None:
+            return
+        if isinstance(self.ast, VALUE_EXPRESSIONS):
+            raise DQValidationError("Expected expression or key")
+        self.ast.accept(self)
+        return True
+
+    def _get_binary_operands(self, expr):
+        if not isinstance(expr.left, KeyExpression) and not isinstance(expr.right, KeyExpression):
+            raise DQValidationError("Left or Right operand must be `KeyExpression`")
+        return expr.left.accept(self), expr.right.accept(self)
+
+    def visit_lt(self, expr):
+        return self._get_binary_operands(expr)
+
+    def visit_lte(self, expr):
+        return self._get_binary_operands(expr)
+
+    def visit_gt(self, expr):
+        return self._get_binary_operands(expr)
+
+    def visit_gte(self, expr):
+        return self._get_binary_operands(expr)
+
+    def visit_equal(self, expr):
+        return self._get_binary_operands(expr)
+
+    def visit_notequal(self, expr):
+        return self._get_binary_operands(expr)
+
+    def visit_contains(self, expr):
+        return self._get_binary_operands(expr)
+
+    def visit_in(self, expr):
+        return self._get_binary_operands(expr)
+
+    def visit_match(self, expr):
+        return self._get_binary_operands(expr)
+
+    def visit_like(self, expr):
+        return self._get_binary_operands(expr)
+
+    def visit_key(self, expr):
+        return expr
+
+    def visit_number(self, expr):
+        return expr
+
+    def visit_boolean(self, expr):
+        return expr
+
+    def visit_string(self, expr):
+        return expr
+
+    def visit_now(self, expr):
+        return expr
+
+    def visit_none(self, expr):
+        return expr
+
+    def visit_regexp(self, expr):
+        return expr
+
+    def visit_array(self, expr):
+        return expr
+
+    def visit_not(self, expr):
+        if isinstance(expr.value, VALUE_EXPRESSIONS):
+            raise DQValidationError(
+                "NOT must be used with AND, OR, KEY or with Binary Operations, not values")
+        return expr.value.accept(self)
+
+    def visit_and(self, expr):
+        if isinstance(expr.left, VALUE_EXPRESSIONS) or isinstance(expr.right, VALUE_EXPRESSIONS):
+            raise DQValidationError('AND operands must be KEY or Operations, not values')
+        return expr.left.accept(self), expr.right.accept(self)
+
+    def visit_or(self, expr):
+        if isinstance(expr.left, VALUE_EXPRESSIONS) or isinstance(expr.right, VALUE_EXPRESSIONS):
+            raise DQValidationError('OR operands must be KEY or Operations, not values')
+        return expr.left.accept(self), expr.right.accept(self)
 
 
 class DataQueryVisitor:

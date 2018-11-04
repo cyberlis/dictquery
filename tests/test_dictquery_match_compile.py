@@ -2,7 +2,7 @@
 from datetime import datetime, timedelta
 import unittest
 
-from dictquery.exceptions import DQSyntaxError
+from dictquery.exceptions import DQSyntaxError, DQValidationError
 import dictquery as dq
 
 
@@ -138,6 +138,21 @@ class TestMatchCompile(unittest.TestCase):
         self.assertFalse(dq.match(data2, "x >= y"))
         self.assertTrue(dq.match(data2, "x != y"))
         self.assertTrue(dq.match(data3, "age < `friends.age`"))
+
+    def test_validation(self):
+        data = {}
+        with self.assertRaises(DQValidationError):
+            dq.match(data, "44 == 44")
+
+        with self.assertRaises(DQValidationError):
+            dq.compile("44 == 44")
+
+    def test_disable_validation(self):
+        data = {}
+        with self.assertRaises(DQValidationError):
+            compiled = dq.compile("44 == 44")
+        compiled = dq.compile("44 == 44", validate=False)
+        self.assertTrue(compiled.match(data))
 
 
 
