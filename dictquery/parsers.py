@@ -1,13 +1,14 @@
 """
 Grammar
 
-statement :=  expression {OR|AND expression}
+orstatement :=  andstatement {OR andstatement}
+andstatement :=  expression {AND expression}
 
 expression := NOT expr | expr
 
-expr := ( statement )
-        | key != | <= | >= | < | > | == value
-        | key IN ARRAY | STRING
+expr := ( orstatement )
+        | key != | <= | >= | < | > | == value | key
+        | key IN ARRAY | STRING | key
         | key LIKE STRING
         | key MATCH STRING
         | key CONTAINS ARRAY | STRING
@@ -194,7 +195,7 @@ class DataQueryParser:
         self.tok = None
         self.nexttok = None
         self._advance()
-        return self.statement()
+        return self.orstatement()
 
     def _advance(self):
         self.tok, self.nexttok = self.nexttok, next(self.tokens, None)
@@ -218,9 +219,17 @@ class DataQueryParser:
         if not self._accept(toktype):
             raise DQSyntaxError("Expected token %s" % str(toktype))
 
-    def statement(self):
+    def orstatement(self):
+        leftval = self.andstatement()
+        while self._accept('OR'):
+            op = token_to_class[self.tok.type]
+            rightval = self.andstatement()
+            leftval = op(leftval, rightval)
+        return leftval
+
+    def andstatement(self):
         leftval = self.expression()
-        while self._accept(('OR', 'AND')):
+        while self._accept('AND'):
             op = token_to_class[self.tok.type]
             rightval = self.expression()
             leftval = op(leftval, rightval)
@@ -233,7 +242,7 @@ class DataQueryParser:
 
     def expr(self):
         if self._accept('LPAR'):
-            obj = self.statement()
+            obj = self.orstatement()
             self._expect('RPAR')
             return obj
 
@@ -250,10 +259,22 @@ class DataQueryParser:
             rightval = token_to_class['STRING'](self.tok.value[1:-1])
             return op(leftval, rightval)
 
+        if self._accept('IN'):
+            op = token_to_class[self.tok.type]
+            rightval = self.value()
+            valid_types = (StringExpression, ArrayExpression, KeyExpression)
+            if not isinstance(rightval, valid_types):
+                raise DQSyntaxError("Expected STRING, ARRAY, KEY")
+            return op(leftval, rightval)
+
         if self._accept(BINARY_OPS):
             op = token_to_class[self.tok.type]
             rightval = self.value()
             return op(leftval, rightval)
+        elif self.nexttok is not None and \
+                self.nexttok.type not in ('OR', 'AND', 'RPAR'):
+            raise DQSyntaxError(
+                "Expected binary operation %s" % ', '.join(BINARY_OPS))
         return leftval
 
     def value(self):

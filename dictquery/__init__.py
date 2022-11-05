@@ -6,7 +6,7 @@ from dictquery.visitors import (
     KeyExistenceValidatorVisitor)
 from dictquery.parsers import DataQueryParser
 
-__version__ = '0.4.0'
+__version__ = '0.5.0.dev1'
 parser = DataQueryParser()
 
 

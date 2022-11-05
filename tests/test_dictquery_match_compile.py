@@ -101,6 +101,8 @@ class TestMatchCompile(unittest.TestCase):
         self.assertFalse(dq.match(data, "a == 0 AND c == 1"))
         self.assertTrue(dq.match(data, "a == 0 AND c == 1 OR z == 0"))
         self.assertFalse(dq.match(data, "a == 0 AND (c == 1 OR z == 0)"))
+        self.assertTrue(dq.match(data, "a == 1 OR c == 0 AND x == 1"))
+        self.assertFalse(dq.match(data, "(a == 1 OR c == 0) AND x == 1"))
 
     def test_case_sensitive(self):
         data = {'username': 'CybeRLiS'}

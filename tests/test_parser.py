@@ -102,6 +102,15 @@ class TestVisitorParser(unittest.TestCase):
         self.assertEqual(result.left.value, 'hello')
         self.assertEqual(result.right.value, 'hello world')
 
+        with self.assertRaises(DQSyntaxError):
+            result = parser.parse('"hello" IN 23')
+
+        with self.assertRaises(DQSyntaxError):
+            result = parser.parse('"hello" IN None')
+
+        with self.assertRaises(DQSyntaxError):
+            result = parser.parse('"hello" IN NOW')
+
     def test_parse_contains(self):
         parser = DataQueryParser()
         result = parser.parse('"hello world" CONTAINS "hello"')
@@ -177,6 +186,21 @@ class TestVisitorParser(unittest.TestCase):
         self.assertIsInstance(result, OrExpression)
         self.assertEqual(result.left.value, '35')
         self.assertEqual(result.right.value, '13')
+
+    def test_parse_and_runs_first(self):
+        parser = DataQueryParser()
+        result = parser.parse('TRUE OR FALSE AND TRUE')
+        self.assertIsInstance(result, OrExpression)
+
+
+    def test_parse_invalid_expressions(self):
+        parser = DataQueryParser()
+        with self.assertRaises(DQSyntaxError):
+            parser.parse('34 34')
+        with self.assertRaises(DQSyntaxError):
+            parser.parse('x y')
+        with self.assertRaises(DQSyntaxError):
+            parser.parse('x 12 y')
 
 if __name__ == '__main__':
     unittest.main()
