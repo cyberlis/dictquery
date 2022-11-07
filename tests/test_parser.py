@@ -201,6 +201,10 @@ class TestVisitorParser(unittest.TestCase):
             parser.parse('x y')
         with self.assertRaises(DQSyntaxError):
             parser.parse('x 12 y')
+        with self.assertRaises(DQSyntaxError):
+            parser.parse('x == 12 y == 6')
+        with self.assertRaises(DQSyntaxError):
+            parser.parse('x > 1 iiii x > 2')
 
 if __name__ == '__main__':
     unittest.main()

@@ -225,6 +225,8 @@ class DataQueryParser:
             op = token_to_class[self.tok.type]
             rightval = self.andstatement()
             leftval = op(leftval, rightval)
+        if self.nexttok is not None and self.nexttok.type != 'RPAR':
+            raise DQSyntaxError("Expected AND or OR instead of %s" % self.nexttok.value)
         return leftval
 
     def andstatement(self):

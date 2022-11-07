@@ -12,6 +12,3 @@ class DQEvaluationError(DQException):
 
 class DQKeyError(DQException, KeyError):
     pass
-
-class DQValidationError(DQException):
-    pass
