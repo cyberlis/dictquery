@@ -4,7 +4,7 @@ from dictquery.visitors import (
 )
 from dictquery.parsers import DataQueryParser
 
-__version__ = '0.5.0.dev1'
+__version__ = '0.5.0'
 parser = DataQueryParser()
 
 
